@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APA Citation Mastery Course</title>
+    
+    <!-- Load React, ReactDOM, Babel, and Tailwind via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom CSS for animations and scrollbars -->
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(5px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans selection:bg-indigo-200">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- Inline SVG Icons (Replacing lucide-react for standalone HTML) ---
+        const IconWrapper = ({ children, size=24, className="" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{children}</svg>
+        );
+        const BookOpen = (p) => <IconWrapper {...p}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></IconWrapper>;
+        const CheckCircle = (p) => <IconWrapper {...p}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></IconWrapper>;
+        const AlertCircle = (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></IconWrapper>;
+        const Edit3 = (p) => <IconWrapper {...p}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></IconWrapper>;
+        const ArrowRight = (p) => <IconWrapper {...p}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></IconWrapper>;
+        const BookMarked = (p) => <IconWrapper {...p}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><polyline points="10 2 10 10 13 7 16 10 16 2"/></IconWrapper>;
+        const MessageSquareQuote = (p) => <IconWrapper {...p}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10v-2c0-1.1.9-2 2-2h0a2 2 0 0 1 2 2v2"/><path d="M14 10v-2c0-1.1.9-2 2-2h0a2 2 0 0 1 2 2v2"/></IconWrapper>;
+        const ChevronDown = (p) => <IconWrapper {...p}><polyline points="6 9 12 15 18 9"/></IconWrapper>;
+        const Info = (p) => <IconWrapper {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></IconWrapper>;
+        const ListChecks = (p) => <IconWrapper {...p}><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></IconWrapper>;
+        const AlertTriangle = (p) => <IconWrapper {...p}><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></IconWrapper>;
+        const Lightbulb = (p) => <IconWrapper {...p}><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.2 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></IconWrapper>;
+        const ExternalLink = (p) => <IconWrapper {...p}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></IconWrapper>;
+
+        // --- Shared Components ---
+        const Card = ({ children, className = '' }) => (
+            <div className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden ${className}`}>
+                {children}
+            </div>
+        );
+
+        const SectionHeading = ({ title, icon: Icon, description }) => (
+            <div className="mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg">
+                        <Icon size={24} />
+                    </div>
+                    <h2 className="text-2xl font-bold text-slate-800">{title}</h2>
+                </div>
+                {description && <p className="text-slate-600 text-lg ml-11">{description}</p>}
+            </div>
+        );
+
+        // --- Interactive Modules ---
+        const InteractiveParagraph = () => {
+            const [activeHighlight, setActiveHighlight] = useState(null);
+
+            return (
+                <Card className="p-6 mb-8 border-l-4 border-l-indigo-500">
+                    <h3 className="text-lg font-semibold mb-4 text-slate-800 flex items-center gap-2">
+                        <Info size={20} className="text-indigo-500" />
+                        Analyze the Sample Paragraph
+                    </h3>
+                    <p className="text-slate-500 mb-4 text-sm">Hover over or click the highlighted text to see how citations are integrated.</p>
+                    
+                    <div className="text-slate-700 leading-relaxed space-y-4 text-lg">
+                        <p>
+                        Medical students should not be allowed to use smartphones in class because they reduce focus and learning. 
+                        A study on medical students in PubMed Central found that phones were the most common electronic distraction, and 68% of students said ringing phones disturbed them{' '}
+                        <span 
+                            className="cursor-pointer font-semibold bg-yellow-100 text-yellow-800 px-1 rounded border-b-2 border-yellow-400 hover:bg-yellow-200 transition-colors"
+                            onMouseEnter={() => setActiveHighlight('parenthetical1')}
+                            onMouseLeave={() => setActiveHighlight(null)}
+                        >
+                            (Attia et al., 2017)
+                        </span>. 
+                        The other study reported that students performed medical procedures like needle insertion much worse when they received phone calls during practical exams{' '}
+                        <span 
+                            className="cursor-pointer font-semibold bg-green-100 text-green-800 px-1 rounded border-b-2 border-green-400 hover:bg-green-200 transition-colors"
+                            onMouseEnter={() => setActiveHighlight('parenthetical2')}
+                            onMouseLeave={() => setActiveHighlight(null)}
+                        >
+                            (Toader et al., 2022)
+                        </span>. 
+                        Together, these findings show that smartphones distract students from essential medical knowledge and skills in a field that requires full concentration.
+                        </p>
+                    </div>
+
+                    <div className="mt-6 min-h-[80px] bg-slate-50 rounded-lg border border-slate-200 p-4 flex items-center justify-center text-center transition-all">
+                        {activeHighlight === 'parenthetical1' ? (
+                        <p className="text-yellow-800 font-medium animate-fade-in">
+                            <span className="font-bold">Parenthetical Citation:</span> Placed at the end of the summarized information. Uses "et al." because there are 3 or more authors.
+                        </p>
+                        ) : activeHighlight === 'parenthetical2' ? (
+                        <p className="text-green-800 font-medium animate-fade-in">
+                            <span className="font-bold">Parenthetical Citation:</span> Follows the paraphrased finding. Author and year are enclosed in parentheses.
+                        </p>
+                        ) : (
+                        <p className="text-slate-400 italic">Interact with the highlighted citations above.</p>
+                        )}
+                    </div>
+                </Card>
+            );
+        };
+
+        const QuizQuestion = ({ question, options, correctAnswer, explanation }) => {
+            const [selected, setSelected] = useState(null);
+            const [isCorrect, setIsCorrect] = useState(null);
+
+            const handleSelect = (option) => {
+                setSelected(option);
+                setIsCorrect(option === correctAnswer);
+            };
+
+            return (
+                <div className="bg-slate-50 rounded-lg p-5 border border-slate-200 mb-4">
+                    <p className="text-slate-800 font-medium mb-4 text-lg">{question}</p>
+                    <div className="flex flex-wrap gap-3 mb-4">
+                        {options.map((opt) => (
+                        <button
+                            key={opt}
+                            onClick={() => handleSelect(opt)}
+                            className={`px-5 py-2 rounded-full font-medium transition-all ${
+                            selected === opt 
+                                ? (opt === correctAnswer ? 'bg-green-500 text-white border-green-600' : 'bg-red-500 text-white border-red-600')
+                                : 'bg-white border-slate-300 border text-slate-700 hover:bg-slate-100 hover:border-slate-400'
+                            }`}
+                        >
+                            {opt}
+                        </button>
+                        ))}
+                    </div>
+                    
+                    {selected && (
+                        <div className={`p-4 rounded-md flex items-start gap-3 animate-fade-in ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                        {isCorrect ? <CheckCircle className="shrink-0" /> : <AlertCircle className="shrink-0" />}
+                        <div>
+                            <p className="font-bold">{isCorrect ? 'Correct!' : 'Not quite.'}</p>
+                            <p className="text-sm mt-1">{explanation}</p>
+                        </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const ReferenceAnatomy = () => {
+            const [activePart, setActivePart] = useState(null);
+
+            const parts = [
+                { id: 'author', text: 'Attia, N. A., Baig, L., Marzouk, Y. I., & Khan, A.', color: 'bg-blue-100 text-blue-800 border-blue-400', label: 'Authors (Last name, Initials)' },
+                { id: 'year', text: '(2017).', color: 'bg-purple-100 text-purple-800 border-purple-400', label: 'Year of Publication' },
+                { id: 'title', text: 'The potential effect of technology and distractions on undergraduate students\' concentration.', color: 'bg-emerald-100 text-emerald-800 border-emerald-400', label: 'Article Title (Sentence case)' },
+                { id: 'journal', text: 'Pakistan Journal of Medical Sciences Quarterly,', color: 'bg-orange-100 text-orange-800 border-orange-400', label: 'Journal Title (Italicized, Title case)' },
+                { id: 'vol', text: '33(4),', color: 'bg-pink-100 text-pink-800 border-pink-400', label: 'Volume (Italicized) & Issue (in parentheses)' },
+                { id: 'pages', text: '860-865.', color: 'bg-cyan-100 text-cyan-800 border-cyan-400', label: 'Page Numbers' },
+                { id: 'doi', text: 'https://doi.org/10.12669/pjms.334.12560', color: 'bg-gray-200 text-gray-800 border-gray-400', label: 'DOI / Link' },
+            ];
+
+            return (
+                <Card className="p-6">
+                    <h3 className="text-lg font-semibold mb-4 text-slate-800 flex items-center gap-2">
+                        <Lightbulb size={20} className="text-amber-500" />
+                        Anatomy of an APA Reference
+                    </h3>
+                    <p className="text-slate-600 mb-6">Click on different parts of the reference to understand formatting rules.</p>
+                    
+                    <div className="flex flex-wrap gap-1 leading-loose text-lg font-serif">
+                        {parts.map(part => (
+                        <span
+                            key={part.id}
+                            onClick={() => setActivePart(part.id)}
+                            className={`cursor-pointer px-1 rounded border-b-2 transition-all hover:-translate-y-0.5 ${part.color} ${activePart === part.id ? 'ring-2 ring-offset-2 ring-slate-400' : ''}`}
+                        >
+                            {part.id === 'journal' || part.id === 'vol' ? <i>{part.text}</i> : part.text}
+                        </span>
+                        ))}
+                    </div>
+
+                    <div className="mt-8 min-h-[100px]">
+                        {activePart ? (
+                        <div className={`p-4 rounded-lg border-l-4 ${parts.find(p => p.id === activePart).color.replace('border-', 'border-l-').replace('text-', 'text-').replace('bg-', 'bg-').split(' ')[0]} bg-opacity-50 animate-fade-in`}>
+                            <h4 className="font-bold text-lg mb-1">{parts.find(p => p.id === activePart).label}</h4>
+                            <p className="text-slate-700">
+                            {activePart === 'author' && "List authors by Last Name followed by initials. Use an ampersand (&) before the final author's name."}
+                            {activePart === 'year' && "Enclose the publication year in parentheses, followed by a period."}
+                            {activePart === 'title' && "Capitalize only the first word of the title, the first word of a subtitle, and proper nouns."}
+                            {activePart === 'journal' && "Italicize the journal title and use Title Case (capitalize major words)."}
+                            {activePart === 'vol' && "Italicize the volume number. The issue number follows immediately in parentheses (not italicized)."}
+                            {activePart === 'pages' && "Provide the full page range followed by a period."}
+                            {activePart === 'doi' && "Always include a DOI (Digital Object Identifier) formatted as a URL if available."}
+                            </p>
+                        </div>
+                        ) : (
+                        <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 text-center flex flex-col items-center justify-center h-full">
+                            <ArrowRight size={24} className="mb-2 text-slate-300 mx-auto" />
+                            <p>Select a highlighted section above to see details.</p>
+                        </div>
+                        )}
+                    </div>
+                </Card>
+            );
+        };
+
+        const PracticeBox = ({ task, originalText, suggestedAnswer }) => {
+            const [answer, setAnswer] = useState('');
+            const [showAnswer, setShowAnswer] = useState(false);
+
+            return (
+                <div className="mb-6 bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+                    <div className="bg-slate-50 p-4 border-b border-slate-200">
+                        <p className="font-semibold text-slate-800">{task}</p>
+                        {originalText && <p className="text-slate-600 mt-2 italic bg-white p-3 rounded border border-slate-100">{originalText}</p>}
+                    </div>
+                    <div className="p-4">
+                        <textarea
+                        className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none transition-all"
+                        rows="3"
+                        placeholder="Type your answer here..."
+                        value={answer}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        ></textarea>
+                        
+                        <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <button
+                            onClick={() => setShowAnswer(!showAnswer)}
+                            className="flex items-center gap-2 text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
+                        >
+                            {showAnswer ? 'Hide Solution' : 'Reveal Suggested Solution'}
+                            <ChevronDown size={18} className={`transform transition-transform ${showAnswer ? 'rotate-180' : ''}`} />
+                        </button>
+                        </div>
+
+                        {showAnswer && (
+                        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200 animate-fade-in text-green-900">
+                            <p className="font-semibold mb-1 flex items-center gap-2">
+                            <CheckCircle size={18} /> Suggested Answer:
+                            </p>
+                            <p>{suggestedAnswer}</p>
+                        </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+
+        // --- Main Application ---
+        function App() {
+            const [activeTab, setActiveTab] = useState('basics');
+
+            const tabs = [
+                { id: 'basics', label: '1. The Basics', icon: BookOpen },
+                { id: 'intext', label: '2. In-Text Citations', icon: MessageSquareQuote },
+                { id: 'reference', label: '3. Reference List', icon: BookMarked },
+                { id: 'verbs', label: '4. Reporting Verbs', icon: ListChecks },
+                { id: 'bibguru', label: '5. BibGuru Guide', icon: ExternalLink },
+                { id: 'practice', label: '6. Practice Arena', icon: Edit3 },
+            ];
+
+            return (
+                <div className="min-h-screen pb-12 flex flex-col">
+                {/* Header */}
+                <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="py-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                        <h1 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+                            Mastering APA 7th Edition
+                        </h1>
+                        <p className="text-slate-500 mt-1 font-medium">Citation, References, and Reporting Verbs</p>
+                        </div>
+                        <div className="flex gap-2 items-center bg-indigo-50 text-indigo-700 px-4 py-2 rounded-full font-semibold border border-indigo-100">
+                        <BookOpen size={18} /> Interactive Guide
+                        </div>
+                    </div>
+                    
+                    {/* Mobile/Tablet Tab Nav */}
+                    <div className="md:hidden flex overflow-x-auto pb-4 gap-2 snap-x hide-scrollbar">
+                        {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`snap-start whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                            activeTab === tab.id 
+                                ? 'bg-indigo-600 text-white' 
+                                : 'bg-white border border-slate-200 text-slate-600'
+                            }`}
+                        >
+                            {tab.label}
+                        </button>
+                        ))}
+                    </div>
+                    </div>
+                </header>
+
+                <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex gap-8 flex-1 w-full">
+                    
+                    {/* Desktop Sidebar */}
+                    <aside className="hidden md:block w-64 shrink-0">
+                    <nav className="sticky top-32 space-y-2">
+                        {tabs.map((tab) => {
+                        const Icon = tab.icon;
+                        return (
+                            <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-left ${
+                                activeTab === tab.id 
+                                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
+                                : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
+                            }`}
+                            >
+                            <Icon size={20} className={activeTab === tab.id ? 'text-indigo-100' : 'text-slate-400'} />
+                            {tab.label}
+                            </button>
+                        );
+                        })}
+                    </nav>
+                    </aside>
+
+                    {/* Content Area */}
+                    <div className="flex-1 w-full">
+                    
+                    {/* MODULE 1: Basics */}
+                    {activeTab === 'basics' && (
+                        <div className="animate-fade-in">
+                        <SectionHeading 
+                            title="The Basics of Citation" 
+                            icon={BookOpen} 
+                            description="Understanding the what, why, and when of academic referencing." 
+                        />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Card className="p-6 bg-gradient-to-br from-white to-slate-50">
+                            <h3 className="text-xl font-bold text-indigo-900 mb-3">What is citation?</h3>
+                            <p className="text-slate-700 leading-relaxed border-l-4 border-indigo-300 pl-4">
+                                According to Plagiarism.org (2017), a "citation" is the way to inform your readers that you have taken ideas from other sources.
+                            </p>
+                            </Card>
+
+                            <Card className="p-6">
+                            <h3 className="text-xl font-bold text-slate-800 mb-3">Why cite?</h3>
+                            <ul className="space-y-3">
+                                <li className="flex items-start gap-2">
+                                <CheckCircle size={20} className="text-green-500 shrink-0 mt-0.5" />
+                                <span className="text-slate-700"><strong>Credit the author</strong> when using their information.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                <CheckCircle size={20} className="text-green-500 shrink-0 mt-0.5" />
+                                <span className="text-slate-700"><strong>Clarify</strong> which ideas are yours and which are from others.</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                <CheckCircle size={20} className="text-green-500 shrink-0 mt-0.5" />
+                                <span className="text-slate-700"><strong>Avoid plagiarism</strong> by acknowledging your sources properly.</span>
+                                </li>
+                            </ul>
+                            </Card>
+                        </div>
+
+                        <Card className="mt-6 p-8 bg-indigo-50 border border-indigo-200 text-center shadow-sm">
+                            <h3 className="text-2xl font-bold mb-3 text-indigo-900">When do we need citations?</h3>
+                            <p className="text-slate-700 text-lg max-w-2xl mx-auto leading-relaxed">
+                            We must cite whenever we <strong className="text-indigo-700 font-bold">summarize</strong>, <strong className="text-indigo-700 font-bold">paraphrase</strong>, or <strong className="text-indigo-700 font-bold">directly quote</strong> from others' works.
+                            </p>
+                        </Card>
+                        </div>
+                    )}
+
+                    {/* MODULE 2: In-Text */}
+                    {activeTab === 'intext' && (
+                        <div className="animate-fade-in">
+                        <SectionHeading 
+                            title="In-Text Citations" 
+                            icon={MessageSquareQuote} 
+                            description="How to format citations within the body of your text." 
+                        />
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                            <Card className="p-5 border-t-4 border-t-blue-500">
+                            <h4 className="font-bold text-slate-800 mb-2">General Rule</h4>
+                            <p className="text-slate-600 mb-3 text-sm">Author's last name and the year of publication.</p>
+                            <code className="bg-slate-100 px-2 py-1 rounded text-blue-700 font-bold block text-center">(Field, 2015)</code>
+                            </Card>
+                            <Card className="p-5 border-t-4 border-t-purple-500">
+                            <h4 className="font-bold text-slate-800 mb-2">Direct Quotations</h4>
+                            <p className="text-slate-600 mb-3 text-sm">Add the specific page number to the citation.</p>
+                            <code className="bg-slate-100 px-2 py-1 rounded text-purple-700 font-bold block text-center">(Field, 2015, p. 14)</code>
+                            </Card>
+                            <Card className="p-5 border-t-4 border-t-emerald-500">
+                            <h4 className="font-bold text-slate-800 mb-2">No Page Numbers</h4>
+                            <p className="text-slate-600 mb-3 text-sm">For websites/e-books, use a paragraph number.</p>
+                            <code className="bg-slate-100 px-2 py-1 rounded text-emerald-700 font-bold block text-center">(Field, 2015, para. 4)</code>
+                            </Card>
+                        </div>
+
+                        <InteractiveParagraph />
+
+                        <h3 className="text-2xl font-bold text-slate-800 mt-10 mb-6">Parenthetical vs. Narrative Citations</h3>
+                        
+                        <div className="flex flex-col md:flex-row gap-6 mb-8">
+                            <div className="flex-1 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                            <h4 className="text-lg font-bold text-indigo-700 mb-2">Parenthetical</h4>
+                            <p className="text-slate-600 mb-4">Author and date appear entirely within parentheses, usually at the end of a sentence.</p>
+                            <div className="bg-slate-50 p-4 rounded-lg italic text-slate-700 border border-slate-100">
+                                The issue was described in more detail <strong className="text-indigo-600 not-italic">(Smith, 2020)</strong>.
+                            </div>
+                            </div>
+                            <div className="flex-1 bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                            <h4 className="text-lg font-bold text-purple-700 mb-2">Narrative</h4>
+                            <p className="text-slate-600 mb-4">Author appears in the text naturally, with the date immediately following in parentheses.</p>
+                            <div className="bg-slate-50 p-4 rounded-lg italic text-slate-700 border border-slate-100">
+                                <strong className="text-purple-600 not-italic">Smith (2020)</strong> describes the issue in more detail...
+                            </div>
+                            </div>
+                        </div>
+
+                        <Card className="p-6 bg-slate-50 mb-8 border-dashed border-2 border-slate-300">
+                            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <CheckCircle className="text-green-500" /> Knowledge Check
+                            </h3>
+                            <QuizQuestion 
+                            question="1. Calvert and Liu (1987) argued that social class is..."
+                            options={['Parenthetical', 'Narrative']}
+                            correctAnswer="Narrative"
+                            explanation="The authors' names are integrated into the grammar of the sentence."
+                            />
+                            <QuizQuestion 
+                            question="2. It is impossible to measure social class (Calvert, 1982)."
+                            options={['Parenthetical', 'Narrative']}
+                            correctAnswer="Parenthetical"
+                            explanation="The author and year are enclosed in parentheses at the end of the thought."
+                            />
+                        </Card>
+
+                        <h3 className="text-2xl font-bold text-slate-800 mb-4">Citation Format Cheat Sheet</h3>
+                        <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm mb-4">
+                            <table className="w-full text-left border-collapse bg-white">
+                            <thead>
+                                <tr className="bg-slate-100 text-slate-800">
+                                <th className="p-4 border-b font-bold">Author Count / Type</th>
+                                <th className="p-4 border-b font-bold">Parenthetical Citation</th>
+                                <th className="p-4 border-b font-bold">Narrative Citation</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                                <tr>
+                                <td className="p-4 font-medium text-slate-700">1 Author</td>
+                                <td className="p-4 font-mono text-sm text-indigo-700 bg-indigo-50">(Jack, 2020)</td>
+                                <td className="p-4 font-mono text-sm text-purple-700 bg-purple-50">Jack (2020)</td>
+                                </tr>
+                                <tr>
+                                <td className="p-4 font-medium text-slate-700">2 Authors</td>
+                                <td className="p-4 font-mono text-sm text-indigo-700 bg-indigo-50">(Salas & Heng, 2020)</td>
+                                <td className="p-4 font-mono text-sm text-purple-700 bg-purple-50">Salas and Heng (2020)</td>
+                                </tr>
+                                <tr>
+                                <td className="p-4 font-medium text-slate-700">3+ Authors</td>
+                                <td className="p-4 font-mono text-sm text-indigo-700 bg-indigo-50">(Martin et al., 2020)</td>
+                                <td className="p-4 font-mono text-sm text-purple-700 bg-purple-50">Martin et al. (2020)</td>
+                                </tr>
+                                <tr>
+                                <td className="p-4 font-medium text-slate-700">No Author</td>
+                                <td className="p-4 font-mono text-sm text-indigo-700 bg-indigo-50">(CCH Macquarie Dict., 1993)</td>
+                                <td className="p-4 font-mono text-sm text-purple-700 bg-purple-50">CCH Macquarie Dict. (1993)</td>
+                                </tr>
+                                <tr>
+                                <td className="p-4 font-medium text-slate-700 align-top">Group Authors (1st time)</td>
+                                <td className="p-4 font-mono text-sm text-indigo-700 bg-indigo-50">(World Health Organization [WHO], 2023)</td>
+                                <td className="p-4 font-mono text-sm text-purple-700 bg-purple-50">World Health Organization (WHO, 2023)</td>
+                                </tr>
+                                <tr>
+                                <td className="p-4 font-medium text-slate-700">Group Authors (2nd time+)</td>
+                                <td className="p-4 font-mono text-sm text-indigo-700 bg-indigo-50">(WHO, 2023)</td>
+                                <td className="p-4 font-mono text-sm text-purple-700 bg-purple-50">WHO (2023)</td>
+                                </tr>
+                            </tbody>
+                            </table>
+                        </div>
+                        </div>
+                    )}
+
+                    {/* MODULE 3: References */}
+                    {activeTab === 'reference' && (
+                        <div className="animate-fade-in">
+                        <SectionHeading 
+                            title="The Reference List" 
+                            icon={BookMarked} 
+                            description="Detailed breakdown of how to list sources at the end of your document." 
+                        />
+                        
+                        <Card className="p-6 mb-8 border-l-4 border-l-purple-500 bg-purple-50">
+                            <p className="text-lg text-purple-900">
+                            A Reference List is a detailed list of all sources cited in your text. It appears on a separate page at the very end of your work.
+                            </p>
+                        </Card>
+
+                        <ReferenceAnatomy />
+
+                        <div className="mt-12 mb-8 animate-fade-in">
+                            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <CheckCircle className="text-green-500" /> How it looks on the page
+                            </h3>
+                            <p className="text-slate-600 mb-6">
+                            When compiling your final Reference list, it must look like a formal document. Notice how the three key formatting rules are applied below:
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div className="bg-indigo-50 text-indigo-800 p-3 rounded border border-indigo-200 flex flex-col items-center text-center">
+                                <strong className="block mb-1 text-sm uppercase tracking-wide">Alphabetical Order</strong>
+                                <span className="text-sm">Sorted A to Z by author last name (Attia &rarr; Bailey &rarr; Toader).</span>
+                            </div>
+                            <div className="bg-emerald-50 text-emerald-800 p-3 rounded border border-emerald-200 flex flex-col items-center text-center">
+                                <strong className="block mb-1 text-sm uppercase tracking-wide">Hanging Indent</strong>
+                                <span className="text-sm">First line is flush left; all subsequent lines are indented.</span>
+                            </div>
+                            <div className="bg-purple-50 text-purple-800 p-3 rounded border border-purple-200 flex flex-col items-center text-center">
+                                <strong className="block mb-1 text-sm uppercase tracking-wide">Italics</strong>
+                                <span className="text-sm">Applied correctly to the Journal Title, Volume, and Book Title.</span>
+                            </div>
+                            </div>
+
+                            <div className="bg-white p-8 sm:p-14 border border-slate-200 shadow-md mx-auto text-slate-900 font-serif rounded-sm overflow-hidden selection:bg-indigo-200">
+                            <h2 className="text-center font-bold text-xl mb-6">References</h2>
+
+                            <div className="space-y-6 text-[1.05rem] leading-loose break-words">
+                                <p className="pl-12 -indent-12">
+                                Attia, N. A., Baig, L., Marzouk, Y. I., & Khan, A. (2017). The potential effect of technology and distractions on undergraduate students' concentration. <em>Pakistan Journal of Medical Sciences Quarterly</em>, <em>33</em>(4), 860-865. https://doi.org/10.12669/pjms.334.12560
+                                </p>
+                                <p className="pl-12 -indent-12">
+                                Bailey, S. (2017). <em>Academic writing: A handbook for international students</em> (5th ed.). Routledge.
+                                </p>
+                                <p className="pl-12 -indent-12">
+                                Toader, J. F., Kleinert, R., Dratsch, T., Fettweis, L., Jakovljevic, N., Graupner, M., Zeeh, M., Kroll, A. C., Fuchs, H. F., Wahba, R., Plum, P., Bruns, C. J., & Datta, R. R. (2022). Effect of phone call distraction on the performance of medical students in an OSCE. <em>BMC Medical Education</em>, <em>22</em>(1), 295. https://doi.org/10.1186/s12909-022-03215-y
+                                </p>
+                            </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-10">
+                            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                            <AlertCircle className="text-slate-400" /> Auto-Generation Tools
+                            </h3>
+                            <p className="text-slate-600 mb-4">You can use generators, but <strong>always double-check</strong> their output against official APA 7 guidelines!</p>
+                            
+                            <div className="flex flex-wrap gap-4">
+                            <a href="https://www.bibguru.com/" target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 px-5 py-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all text-indigo-700 font-medium min-w-[200px]">
+                                BibGuru <ArrowRight size={16} />
+                            </a>
+                            <a href="https://www.scribbr.com/citation/generator/apa/" target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 px-5 py-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all text-indigo-700 font-medium min-w-[200px]">
+                                Scribbr <ArrowRight size={16} />
+                            </a>
+                            <a href="https://quillbot.com/citation-generator/apa" target="_blank" rel="noreferrer" className="flex items-center justify-between gap-3 px-5 py-3 bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md hover:border-indigo-300 transition-all text-indigo-700 font-medium min-w-[200px]">
+                                QuillBot <ArrowRight size={16} />
+                            </a>
+                            </div>
+                        </div>
+                        </div>
+                    )}
+
+                    {/* MODULE 4: Reporting Verbs */}
+                    {activeTab === 'verbs' && (
+                        <div className="animate-fade-in">
+                        <SectionHeading 
+                            title="Reporting Verbs & Phrases" 
+                            icon={ListChecks} 
+                            description="How to smoothly introduce information from someone else's work." 
+                        />
+                        
+                        <Card className="p-6 mb-8">
+                            <p className="text-lg text-slate-700 mb-6">
+                            To introduce information, we use phrases like <strong className="text-indigo-600">"according to"</strong> or a reporting verb like <strong className="text-indigo-600">"state, argue, suggest."</strong>
+                            </p>
+
+                            <div className="space-y-4">
+                            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                                <p className="font-medium text-slate-800">Wills (2020) <span className="bg-yellow-200 text-yellow-900 px-1 rounded">states</span> that GM food can be harmful. <span className="text-slate-500 font-normal italic text-sm ml-2">(Says clearly)</span></p>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                                <p className="font-medium text-slate-800">Jones (2018) <span className="bg-blue-200 text-blue-900 px-1 rounded">mentions</span> the importance of building restoration. <span className="text-slate-500 font-normal italic text-sm ml-2">(Says briefly)</span></p>
+                            </div>
+                            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                                <p className="font-medium text-slate-800">Harris (2021) <span className="bg-purple-200 text-purple-900 px-1 rounded">suggests</span> that Bitcoin has no value. <span className="text-slate-500 font-normal italic text-sm ml-2">(Says indirectly)</span></p>
+                            </div>
+                            </div>
+                        </Card>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                            <div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-4">Vocabulary Matrix</h3>
+                            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                <table className="w-full text-sm">
+                                <thead className="bg-slate-100 text-slate-700 text-left">
+                                    <tr>
+                                    <th className="p-3 border-b">Function</th>
+                                    <th className="p-3 border-b">Examples</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    <tr><td className="p-3 font-medium">Making a claim</td><td className="p-3">believe, claim</td></tr>
+                                    <tr><td className="p-3 font-medium">Expressing agreement</td><td className="p-3">accept, acknowledge</td></tr>
+                                    <tr><td className="p-3 font-medium">Expressing disagreement</td><td className="p-3">question, reject</td></tr>
+                                    <tr><td className="p-3 font-medium">Emphasizing</td><td className="p-3">emphasize, highlight</td></tr>
+                                    <tr><td className="p-3 font-medium">Making recommendations</td><td className="p-3">insist, recommend</td></tr>
+                                    <tr><td className="p-3 font-medium">Expressing a proposition</td><td className="p-3">hypothesize, suggest</td></tr>
+                                </tbody>
+                                </table>
+                            </div>
+                            </div>
+
+                            <div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-4">Crucial Rules</h3>
+                            
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-5 mb-4 relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-red-500"></div>
+                                <h4 className="text-red-800 font-bold flex items-center gap-2 mb-2">
+                                <AlertTriangle size={18} /> The Golden Rule
+                                </h4>
+                                <p className="text-red-900 font-medium mb-3">Never use "according to" with a reporting verb in the same clause!</p>
+                                <div className="bg-white p-3 rounded border border-red-100 text-slate-600 line-through decoration-red-500 decoration-2">
+                                According to Kao (2012) states that teaching language without grammar is impossible.
+                                </div>
+                            </div>
+
+                            <div className="bg-green-50 border border-green-200 rounded-xl p-5 relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
+                                <h4 className="text-green-800 font-bold mb-2">Do this instead:</h4>
+                                <ul className="space-y-2 text-green-900">
+                                <li className="bg-white p-2 rounded border border-green-100">
+                                    <strong>Kao (2012) states that</strong> teaching language...
+                                </li>
+                                <li className="bg-white p-2 rounded border border-green-100">
+                                    <strong>According to Kao (2012),</strong> teaching language...
+                                </li>
+                                </ul>
+                            </div>
+                            </div>
+                        </div>
+                        </div>
+                    )}
+
+                    {/* MODULE 5: BibGuru Guide */}
+                    {activeTab === 'bibguru' && (
+                        <div className="animate-fade-in">
+                        <SectionHeading 
+                            title="BibGuru Tutorial" 
+                            icon={ExternalLink} 
+                            description="A step-by-step guide to generating citations effortlessly using BibGuru." 
+                        />
+                        
+                        <div className="space-y-4 mb-8">
+                            {[
+                            { step: 1, title: "Get Started", desc: "Go to https://www.bibguru.com and click 'Get started now'. No sign-in is required.", images: ["https://i.imgur.com/P8UzMlT.png"] },
+                            { step: 2, title: "Select Style", desc: "Make sure you choose 'APA 7th' from the citation styles dropdown menu.", images: ["https://i.imgur.com/j6NOQyy.png"] },
+                            { step: 3, title: "Find Your Source", desc: "Copy the link to the website you want to cite, or the DOI if it's a journal article.", images: ["https://i.imgur.com/YSxWZVC.png", "https://i.imgur.com/3iex5Z0.png"] },
+                            { step: 4, title: "Add Source", desc: "Paste the link or DOI into the BibGuru search bar and click '+ Add'.", images: ["https://i.imgur.com/OIyaTLg.png"] },
+                            { step: 5, title: "Edit Details", desc: "Click 'Edit Source' if any information automatically pulled by the generator looks incorrect or is missing.", images: ["https://i.imgur.com/kniDOU6.png"] },
+                            { step: 6, title: "Fill Missing Info", desc: "Manually add missing details like the Author or Publication Date, then click 'Save'.", images: ["https://i.imgur.com/NRbhFIj.png", "https://i.imgur.com/8N25Z1T.png"] },
+                            { step: 7, title: "Copy Reference", desc: "Click 'Copy citation to clipboard' to get the full reference list entry and paste it into your document.", images: ["https://i.imgur.com/ad9bjpK.png"] },
+                            { step: 8, title: "Switch View", desc: "To get the in-text citation, change the view mode at the top center to 'Bibliography and in-text citations'.", images: ["https://i.imgur.com/trkak00.png"] },
+                            { step: 9, title: "Copy In-Text Citation", desc: "Click directly on the generated in-text citation (e.g., '(World Health Organization, 2025)') to quickly copy it to your clipboard.", images: ["https://i.imgur.com/S0lyqF8.png"] }
+                            ].map((item) => (
+                            <Card key={item.step} className="p-5 flex flex-col md:flex-row items-start gap-4 border-l-4 border-l-indigo-500 hover:shadow-md transition-shadow bg-white">
+                                <div className="flex-shrink-0 w-8 h-8 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center font-bold">
+                                {item.step}
+                                </div>
+                                <div className="flex-1 w-full">
+                                <h4 className="text-lg font-bold text-slate-800 mb-1">{item.title}</h4>
+                                <p className="text-slate-600 mb-4">{item.desc}</p>
+                                
+                                <div className="flex flex-col gap-4">
+                                    {item.images.map((imgSrc, idx) => (
+                                    <div key={idx} className="rounded-lg overflow-hidden border border-slate-200 bg-slate-50 relative">
+                                        <img 
+                                        src={imgSrc} 
+                                        alt={`Illustration for Step ${item.step} - Part ${idx + 1}`}
+                                        className="w-full h-auto object-cover hover:opacity-95 transition-opacity"
+                                        onError={(e) => { e.target.style.display = 'none'; }}
+                                        />
+                                    </div>
+                                    ))}
+                                </div>
+                                </div>
+                            </Card>
+                            ))}
+                        </div>
+                        </div>
+                    )}
+
+                    {/* MODULE 6: Practice */}
+                    {activeTab === 'practice' && (
+                        <div className="animate-fade-in">
+                        <SectionHeading 
+                            title="Practice Arena" 
+                            icon={Edit3} 
+                            description="Apply what you've learned. Try rewriting the texts below." 
+                        />
+                        
+                        <div className="mb-10">
+                            <h3 className="text-xl font-bold text-slate-800 mb-4 bg-indigo-100 text-indigo-800 inline-block px-3 py-1 rounded">Task 1: Change to Narrative Citation</h3>
+                            <p className="text-slate-600 mb-4">Rewrite the sentences to change the parenthetical citations to narrative ones using reporting verbs.</p>
+                            
+                            <PracticeBox 
+                            task="Sentence 1"
+                            originalText="Academic writing helps students organise their ideas and present them clearly in university assignments (Baily, 2017)."
+                            suggestedAnswer="Baily (2017) explains that academic writing helps students organise their ideas and present them clearly in university assignments."
+                            />
+                            
+                            <PracticeBox 
+                            task="Sentence 2"
+                            originalText="A study on medical students in PubMed Central found that phones were the most common electronic distraction, and 68% of students said ringing phones disturbed them (Attia et al., 2017)."
+                            suggestedAnswer="Attia et al. (2017) found in a study on medical students in PubMed Central that phones were the most common electronic distraction..."
+                            />
+                        </div>
+
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-4 bg-purple-100 text-purple-800 inline-block px-3 py-1 rounded">Task 2: Build Citations from Scratch</h3>
+                            
+                            <Card className="p-5 mb-6 bg-slate-50">
+                            <h4 className="font-bold mb-2">Source Details:</h4>
+                            <ul className="text-sm text-slate-700 space-y-1 mb-4">
+                                <li><strong>Type:</strong> Book</li>
+                                <li><strong>Reference:</strong> Bailey, S. (2017). Academic writing: A handbook for international students (5th ed.). Routledge.</li>
+                                <li><strong>Paraphrased Idea:</strong> Academic writing helps students organise their ideas and present them clearly in university assignments.</li>
+                            </ul>
+                            </Card>
+
+                            <PracticeBox 
+                            task="1. Write a PARENTHETICAL citation for this source."
+                            suggestedAnswer="Academic writing helps students organise their ideas and present them clearly in university assignments (Bailey, 2017)."
+                            />
+
+                            <PracticeBox 
+                            task="2. Write a NARRATIVE citation using one reporting verb."
+                            suggestedAnswer="Bailey (2017) emphasizes that academic writing helps students organise their ideas and present them clearly in university assignments."
+                            />
+                        </div>
+
+                        </div>
+                    )}
+
+                    </div>
+                </main>
+                
+                {/* Course Authors & References Footer */}
+                <footer className="w-full bg-slate-100 border-t border-slate-200 mt-8 py-8 px-4 sm:px-6 lg:px-8 shadow-inner">
+                    <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 text-sm text-slate-700">
+                        <div>
+                            <h3 className="font-bold text-lg text-slate-900 mb-1">APA Citation Mastery Course</h3>
+                            <p className="font-medium text-indigo-700 mb-1">KAO Dara &amp; CHEAM Kokhor</p>
+                            <p className="text-slate-500">April 2026</p>
+                        </div>
+                        
+                        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm w-full md:w-auto">
+                            <h4 className="font-bold text-slate-800 mb-2 flex items-center gap-2">
+                                <BookOpen size={16} className="text-indigo-500" /> 
+                                Reference:
+                            </h4>
+                            <ul className="space-y-2 text-xs leading-relaxed max-w-xl">
+                                <li>APA. (2019). <i>Publication Manual of the American Psychological Association: The Official Guide to APA Style</i>. American Psychological Association.</li>
+                                <li>Bailey, S. (2017). <i>Academic writing: A handbook for international students</i> (5th ed.). Routledge.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </footer>
+                
+                </div>
+            );
+        }
+
+        // Render the app
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
