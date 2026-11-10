@@ -664,7 +664,12 @@
                         
                         <div className="space-y-4 mb-8">
   {[
-    { step: 1, title: "Get Started", desc: "Go to https://www.bibguru.com and click 'Get started now'. No sign-in is required.", images: ["img 1.png"] },
+    { 
+      step: 1, 
+      title: "Get Started", 
+      desc: <>Go to <a href="https://www.bibguru.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">bibguru.com</a> and click 'Get started now'. No sign-in is required.</>, 
+      images: ["img 1.png"] 
+    },
     { step: 2, title: "Select Style", desc: "Make sure you choose 'APA 7th' from the citation styles dropdown menu.", images: ["img 2.png"] },
     { step: 3, title: "Find Your Source", desc: "Copy the link to the website you want to cite, or the DOI if it's a journal article.", images: ["img 3.png", "img 4.png"] },
     { step: 4, title: "Add Source", desc: "Paste the link or DOI into the BibGuru search bar and click '+ Add'.", images: ["img 5.png"] },
